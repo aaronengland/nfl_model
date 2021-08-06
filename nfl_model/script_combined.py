@@ -1,5 +1,5 @@
 # script - combined
-from script_base import NFLModelBase
+from .script_base import NFLModelBase
 
 # new class with combined methods
 class NFLModelCombined(NFLModelBase):
