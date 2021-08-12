@@ -1,0 +1,11 @@
+README.md
+setup.py
+nfl_model/__init__.py
+nfl_model/script_apply.py
+nfl_model/script_base.py
+nfl_model/script_combined.py
+nfl_model.egg-info/PKG-INFO
+nfl_model.egg-info/SOURCES.txt
+nfl_model.egg-info/dependency_links.txt
+nfl_model.egg-info/not-zip-safe
+nfl_model.egg-info/top_level.txt
