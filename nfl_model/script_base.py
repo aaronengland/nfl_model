@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
-import wquantiles as weighted
+#import wquantiles as weighted
 # suppress the SettingWithCopyWarning
 pd.options.mode.chained_assignment = None
 
@@ -192,7 +192,7 @@ class NFLModelBase:
 			list_weights = [1 for x in list_weights]
 		
 		# get median
-		flt_home_score_avg = weighted.median(df_home['home_score'], weights=list_weights)
+		flt_home_score_avg = np.average(df_home['home_score'], weights=list_weights)
 		# get random values from poisson distribution
 		list_pred_home_score = list(np.random.poisson(flt_home_score_avg, int_n_simulations))
 		# save to object
@@ -232,7 +232,7 @@ class NFLModelBase:
 			list_weights = [1 for x in list_weights]
 		
 		# get median
-		flt_away_score_avg = weighted.median(df_away['away_score'], weights=list_weights)
+		flt_away_score_avg = np.average(df_away['away_score'], weights=list_weights)
 		# get random values from poisson distribution
 		list_pred_away_score = list(np.random.poisson(flt_away_score_avg, self.int_n_simulations))
 		# save to object
@@ -269,7 +269,7 @@ class NFLModelBase:
 			list_weights = [1 for x in list_weights]
 		
 		# get median
-		flt_home_score_allowed_avg = weighted.median(df_home['away_score'], weights=list_weights)
+		flt_home_score_allowed_avg = np.average(df_home['away_score'], weights=list_weights)
 		# get random values from poisson distribution
 		list_pred_home_score_allowed = list(np.random.poisson(flt_home_score_allowed_avg, self.int_n_simulations))
 		# save to object
@@ -305,7 +305,7 @@ class NFLModelBase:
 			list_weights = [1 for x in list_weights]
 		
 		# get median
-		flt_away_score_allowed_avg = weighted.median(df_away['home_score'], weights=list_weights)
+		flt_away_score_allowed_avg = np.average(df_away['home_score'], weights=list_weights)
 		# get random values from poisson distribution
 		list_pred_away_score_allowed = list(np.random.poisson(flt_away_score_allowed_avg, self.int_n_simulations))
 		# save to object
