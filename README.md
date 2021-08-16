@@ -31,11 +31,11 @@ cls_nfl_model.predict_from_matchup(str_home_team='Denver Broncos',
 				   int_last_n_games_pts_for_away=4,
 				   int_last_n_games_pts_allow_home=4,
 				   int_last_n_games_pts_allow_away=4,
-								   bool_weight_opp_pts_for_home=True,
-								   bool_weight_opp_pts_for_away=True,
-								   bool_weight_opp_pts_allow_home=True,
-								   bool_weight_opp_pts_allow_away=True,
-								   bool_weight_opp_final=True)
+				   bool_weight_opp_pts_for_home=True,
+				   bool_weight_opp_pts_for_away=True,
+				   bool_weight_opp_pts_allow_home=True,
+				   bool_weight_opp_pts_allow_away=True,
+				   bool_weight_opp_final=True)
 
 # view prediction
 print(cls_nfl_model.dict_results)
