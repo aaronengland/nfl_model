@@ -25,7 +25,7 @@ cls_nfl_model.scrape_and_prep(int_year=2019)
 
 # generate prediction
 cls_nfl_model.predict_from_matchup(str_home_team='Denver Broncos',
-					str_away_team='Cleveland Browns',
+				str_away_team='Cleveland Browns',
 								   int_n_simulations=1000,
 						           int_last_n_games_pts_for_home=4,
 								   int_last_n_games_pts_for_away=4,
