@@ -131,6 +131,7 @@ class NFLModelBase:
 		# return
 		return self
 	# define helper function (could get errors here)
+	@classmethod
 	def win_pct_helper(list_teams_unique, df_prepped_data, int_year):
 		# empty list
 		list_dict_row = []
