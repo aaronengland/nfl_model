@@ -170,9 +170,9 @@ class NFLModelBase:
 		# rm dups
 		list_teams_unique = list(dict.fromkeys(list_all_teams_year))
 		# use helper
-		df_win_pct_home = win_pct_helper(list_teams_unique=list_teams_unique, 
-										 df_prepped_data=df_prepped_data_year, 
-										 int_year=int_year_home)
+		df_win_pct_home = self.win_pct_helper(list_teams_unique=list_teams_unique, 
+										 	  df_prepped_data=df_prepped_data_year, 
+										 	  int_year=int_year_home)
 		# save to object
 		self.int_year_home = int_year_home
 		self.df_win_pct_home = df_win_pct_home
@@ -187,9 +187,9 @@ class NFLModelBase:
 		# rm dups
 		list_teams_unique = list(dict.fromkeys(list_all_teams_year))
 		# use helper
-		df_win_pct_away = win_pct_helper(list_teams_unique=list_teams_unique, 
-										 df_prepped_data=df_prepped_data_year, 
-										 int_year=int_year_away)
+		df_win_pct_away = self.win_pct_helper(list_teams_unique=list_teams_unique, 
+										 	  df_prepped_data=df_prepped_data_year, 
+										 	  int_year=int_year_away)
 		# save to object
 		self.int_year_away = int_year_away
 		self.df_win_pct_away = df_win_pct_away
