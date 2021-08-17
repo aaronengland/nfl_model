@@ -71,6 +71,7 @@ class NFLModelBase:
 		df_schedule_results = pd.DataFrame(list_dict_row)
 		# save to object
 		self.df_schedule_results = df_schedule_results
+		self.int_year = int_year
 		# return self
 		return self
 	# prepare data
@@ -121,16 +122,16 @@ class NFLModelBase:
 																			         away_team=x['away_team'], 
 																					 home_score=x['home_score'], 
 																					 away_score=x['away_score']), axis=1)
+		# drop unplayed games
+		df_prepped_data = df_prepped_data.dropna(subset=['home_score'])
+		# make col for year
+		df_prepped_data['year'] = self.int_year
 		# save to object
 		self.df_prepped_data = df_prepped_data
 		# return
 		return self
-	# get winning pct for each team for weighting later
-	def get_winning_pct(self):
-		# get all teams
-		list_all_teams = list(self.df_prepped_data['home_team']) + list(self.df_prepped_data['away_team'])
-		# rm dups
-		list_teams_unique = list(dict.fromkeys(list_all_teams))
+	# define helper function (could get errors here)
+	def win_pct_helper(list_teams_unique, df_prepped_data, int_year):
 		# empty list
 		list_dict_row = []
 		# iterate through teams
@@ -138,7 +139,7 @@ class NFLModelBase:
 			# empty dict
 			dict_row = {}
 			# subset to where home team or away team == team
-			df_subset = self.df_prepped_data[(self.df_prepped_data['home_team'] == team) | (self.df_prepped_data['away_team'] == team)]
+			df_subset = df_prepped_data[(df_prepped_data['home_team'] == team) | (df_prepped_data['away_team'] == team)]
 			# see how many times team is in winning_team
 			int_n_wins = list(df_subset['winning_team']).count(team)
 			# get number of games
@@ -155,84 +156,127 @@ class NFLModelBase:
 			list_dict_row.append(dict_row)
 		# put into df
 		df_win_pct = pd.DataFrame(list_dict_row)
+		# make col for year
+		df_win_pct['year'] = int_year
+		# return
+		return df_win_pct
+	# get winning oct for year of home team
+	def get_winning_pct_home(self, int_year_home=2019):
+		# subset to int_year_home
+		df_prepped_data_year = self.df_prepped_data[self.df_prepped_data['year']==int_year_home]
+		# get all teams for int_year_home
+		list_all_teams_year = list(df_prepped_data_year['home_team']) + list(df_prepped_data_year['away_team'])
+		# rm dups
+		list_teams_unique = list(dict.fromkeys(list_all_teams_year))
+		# use helper
+		df_win_pct_home = win_pct_helper(list_teams_unique=list_teams_unique, 
+										 df_prepped_data=df_prepped_data_year, 
+										 int_year=int_year_home)
 		# save to object
-		self.df_win_pct = df_win_pct
+		self.int_year_home = int_year_home
+		self.df_win_pct_home = df_win_pct_home
 		# return
 		return self
-	# get predicted points scores by home team when they are home
+	# get winning pct for each team for weighting later
+	def get_winning_pct_away(self, int_year_away=2019):
+		# subset to int_year_away
+		df_prepped_data_year = self.df_prepped_data[self.df_prepped_data['year']==int_year_away]
+		# get all teams for int_year_away
+		list_all_teams_year = list(df_prepped_data_year['home_team']) + list(df_prepped_data_year['away_team'])
+		# rm dups
+		list_teams_unique = list(dict.fromkeys(list_all_teams_year))
+		# use helper
+		df_win_pct_away = win_pct_helper(list_teams_unique=list_teams_unique, 
+										 df_prepped_data=df_prepped_data_year, 
+										 int_year=int_year_away)
+		# save to object
+		self.int_year_away = int_year_away
+		self.df_win_pct_away = df_win_pct_away
+		# return
+		return self
+	# get predicted points scored by home team when they are home
 	def get_points_scored_by_home_team(self, str_home_team='Denver Broncos',
 										     int_last_n_games=4,
 											 bool_weight_opp=True,
 											 int_n_simulations=1000):
-		# drop unplayed games
-		df = self.df_prepped_data.dropna(subset=['home_score'])
+		# subset to year
+		df_prepped_data_year = self.df_prepped_data[self.df_prepped_data['year']==self.int_year_home]
 		# get all the games where the home_team was home
-		df_home = df[(df['home_team'] == str_home_team)]
+		df_prepped_data_year_home = df_prepped_data_year[(df_prepped_data_year['home_team'] == str_home_team)]
+
+		# save to object at this stage so we dont have to subset again later
+		self.df_prepped_data_year_home_copy = df_prepped_data_year_home.copy()
+
 		# get n_rows
-		int_n_rows = df_home.shape[0]
+		int_n_rows = df_prepped_data_year_home.shape[0]
 		# logic to prevent errors when subsetting games
 		if int_last_n_games < int_n_rows:
-			df_home = df_home.iloc[-int_last_n_games:]
+			df_prepped_data_year_home = df_prepped_data_year_home.iloc[-int_last_n_games:]
 		else:
 			pass
 		# if weighting each game by opponent win pct
 		if bool_weight_opp:
 			# merge with df_win_pct to get opponent win %
-			df_home = pd.merge(left=df_home, 
-							   right=self.df_win_pct, 
-							   left_on='away_team', 
-							   right_on='team', 
-							   how='left')
+			df_prepped_data_year_home = pd.merge(left=df_prepped_data_year_home, 
+							   					 right=self.df_win_pct_home, 
+											     left_on='away_team', 
+											     right_on='team', 
+											     how='left')
 			# save weights
-			list_weights = list(df_home['win_pct'])
+			list_weights = list(df_prepped_data_year_home['win_pct'])
 
 		# logic to catch potential errors
 		if (np.sum(list_weights) == 0) or (not bool_weight_opp):
 			# weight everything the same
-			list_weights = [1 for x in list_weights]
+			list_weights = [1 for x in df_prepped_data_year_home['win_pct']]
 		
 		# get median
-		flt_home_score_avg = np.average(df_home['home_score'], weights=list_weights)
+		flt_home_score_avg = np.average(df_prepped_data_year_home['home_score'], weights=list_weights)
 		# get random values from poisson distribution
 		list_pred_home_score = list(np.random.poisson(flt_home_score_avg, int_n_simulations))
 		# save to object
-		self.df = df
 		self.str_home_team = str_home_team
 		self.int_n_simulations = int_n_simulations
 		self.list_pred_home_score = list_pred_home_score
 		# return
 		return self
-	# get predicted points scores by away team when they are home
+	# get predicted points scored by away team when they are away
 	def get_points_scored_by_away_team(self, str_away_team='Denver Broncos',
 										     int_last_n_games=4,
 											 bool_weight_opp=True):
+		# subset to year
+		df_prepped_data_year = self.df_prepped_data[self.df_prepped_data['year']==self.int_year_away]
 		# get all the games where the away team was away
-		df_away = self.df[(self.df['away_team'] == str_away_team)]
+		df_prepped_data_year_away = df_prepped_data_year[(df_prepped_data_year['away_team'] == str_away_team)]
+
+		# save to object at this stage so we dont have to subset again
+		self.df_prepped_data_year_away_copy = df_prepped_data_year_away.copy()
+
 		# get n_rows
-		int_n_rows = df_away.shape[0]
+		int_n_rows = df_prepped_data_year_away.shape[0]
 		# logic to prevent errors when subsetting games
 		if int_last_n_games < int_n_rows:
-			df_away = df_away.iloc[-int_last_n_games:]
+			df_prepped_data_year_away = df_prepped_data_year_away.iloc[-int_last_n_games:]
 		else:
 			pass
 		# if weighting each game by opponent win pct
 		if bool_weight_opp:
 			# merge with df_win_pct to get opponent win %
-			df_away = pd.merge(left=df_away, 
-							   right=self.df_win_pct, 
-							   left_on='home_team', 
-							   right_on='team', 
-							   how='left')
+			df_prepped_data_year_away = pd.merge(left=df_prepped_data_year_away, 
+											     right=self.df_win_pct_away, 
+											     left_on='home_team', 
+											     right_on='team', 
+											     how='left')
 			# save weights
-			list_weights = list(df_away['win_pct'])
+			list_weights = list(df_prepped_data_year_away['win_pct'])
 
 		# logic to catch potential errors
 		if (np.sum(list_weights) == 0) or (not bool_weight_opp):
 			# weight everything the same
-			list_weights = [1 for x in list_weights]
+			list_weights = [1 for x in df_prepped_data_year_away['win_pct']]
 		
 		# get median
-		flt_away_score_avg = np.average(df_away['away_score'], weights=list_weights)
+		flt_away_score_avg = np.average(df_prepped_data_year_away['away_score'], weights=list_weights)
 		# get random values from poisson distribution
 		list_pred_away_score = list(np.random.poisson(flt_away_score_avg, self.int_n_simulations))
 		# save to object
@@ -243,8 +287,8 @@ class NFLModelBase:
 	# get predicted points allowed by home team
 	def get_points_allowed_by_home_team(self, int_last_n_games=4,
 									          bool_weight_opp=True):
-		# get all the games where the home_team was home
-		df_home = self.df[(self.df['home_team'] == self.str_home_team)]
+		# get all the games where the home_team was home (df_prepped_data_year_home_copy)
+		df_home = self.df_prepped_data_year_home_copy.copy()
 		# get n_rows
 		int_n_rows = df_home.shape[0]
 		# logic to prevent errors when subsetting games
@@ -256,7 +300,7 @@ class NFLModelBase:
 		if bool_weight_opp:
 			# merge with df_win_pct to get opponent win %
 			df_home = pd.merge(left=df_home, 
-							   right=self.df_win_pct, 
+							   right=self.df_win_pct_home, 
 							   left_on='away_team', 
 							   right_on='team', 
 							   how='left')
@@ -280,7 +324,7 @@ class NFLModelBase:
 	def get_points_allowed_by_away_team(self, int_last_n_games=4,
 									          bool_weight_opp=True):
 		# get all the games where the away team was away
-		df_away = self.df[(self.df['away_team'] == self.str_away_team)]
+		df_away = self.df_prepped_data_year_away_copy.copy()
 		# get n_rows
 		int_n_rows = df_away.shape[0]
 		# logic to prevent errors when subsetting games
@@ -292,7 +336,7 @@ class NFLModelBase:
 		if bool_weight_opp:
 			# merge with df_win_pct to get opponent win %
 			df_away = pd.merge(left=df_away, 
-							   right=self.df_win_pct, 
+							   right=self.df_win_pct_away, 
 							   left_on='home_team', 
 							   right_on='team', 
 							   how='left')
@@ -323,9 +367,9 @@ class NFLModelBase:
 		# if weighting
 		if bool_weight_opp:
 			# get win pct for home
-			flt_win_pct_home = self.df_win_pct[self.df_win_pct['team']==self.str_home_team]['win_pct'].iloc[0]
+			flt_win_pct_home = self.df_win_pct_home[self.df_win_pct_home['team']==self.str_home_team]['win_pct'].iloc[0]
 			# get win pct for away
-			flt_win_pct_away = self.df_win_pct[self.df_win_pct['team']==self.str_away_team]['win_pct'].iloc[0]
+			flt_win_pct_away = self.df_win_pct_away[self.df_win_pct_away['team']==self.str_away_team]['win_pct'].iloc[0]
 			# put into list
 			list_weights = [flt_win_pct_home, flt_win_pct_away]
 		else:

@@ -9,8 +9,14 @@ class NFLModelCombined(NFLModelBase):
 		self.scrape_nfl_schedule(int_year=int_year)
 		# prepare
 		self.prepare_data()
-		# get winning pct
-		self.get_winning_pct()
+		# return self
+		return self
+	# make function that get winning pct
+	def get_winning_pct(self, int_year_home=2019, int_year_away=2019)
+		# get winning pct home
+		self.get_winning_pct_home(int_year_home=int_year_home)
+		# get winning pct away
+		self.get_winning_pct_away(int_year_away=int_year_away)
 		# return self
 		return self
 	# make a function that predicts a matchup
