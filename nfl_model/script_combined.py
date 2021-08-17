@@ -12,7 +12,7 @@ class NFLModelCombined(NFLModelBase):
 		# return self
 		return self
 	# make function that get winning pct
-	def get_winning_pct(self, int_year_home=2019, int_year_away=2019)
+	def get_winning_pct(self, int_year_home=2019, int_year_away=2019):
 		# get winning pct home
 		self.get_winning_pct_home(int_year_home=int_year_home)
 		# get winning pct away
