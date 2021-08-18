@@ -47,7 +47,7 @@ for int_year in range(1985, 2020+1):
 	cls_nfl_model.scrape_and_prep(int_year=int_year)
 	# get the data
 	df_prepped_data = cls_nfl_model.df_prepped_data
-	# append to df_schedule
+	# append to df_prepped_data_all
 	df_prepped_data_all = df_prepped_data_all.append(df_prepped_data)
 
 # save df_prepped_data_all into cls_nfl_model
